@@ -5,8 +5,8 @@
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-let TMDB_KEY, SUPABASE_URL, SUPABASE_KEY;
-let supabase;
+//let TMDB_KEY, SUPABASE_URL, SUPABASE_KEY;
+//let supabase;
 
 // Load environment variables dynamically from Netlify Function
 async function loadEnv() {
