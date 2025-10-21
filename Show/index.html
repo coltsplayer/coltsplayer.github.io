@@ -1,24 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>TV Show Info Finder</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TV Show Tracker</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>🎬 TV Show Info Finder</h1>
-    <input id="searchInput" type="text" placeholder="Enter a TV show name..." />
-    <button id="searchBtn">Search</button>
-    <div id="showInfo"></div>
-    
-    <div id="favoritesSection">
-    <h2>⭐ My Favorites</h2>
-    <div id="favoritesList"></div>
-    </div>
-  </div>
+  <header>
+    <h1>🎬 TV Show Tracker</h1>
+  </header>
 
+  <main>
+    <section class="search">
+      <input type="text" id="searchInput" placeholder="Enter a TV show name..." />
+      <button id="searchBtn">Search</button>
+    </section>
+
+    <section id="showInfo" class="show-info"></section>
+
+    <section class="favorites-section">
+      <h2>⭐ Favorites</h2>
+      <ul id="favoritesList"></ul>
+    </section>
+  </main>
+
+  <!-- ✅ Load environment variables first -->
   <script src="env.js"></script>
+
+  <!-- ✅ Load main logic -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
