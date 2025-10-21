@@ -1,14 +1,13 @@
-// ✅ Import Supabase (ESM build)
+// ===============================
+// ✅ API Keys
+// Replace these with your own keys
+// ===============================
+const TMDB_KEY = "YOUR_V3_TMDB_API_KEY_HERE"; // TMDB v3 API key
+const SUPABASE_URL = "https://qobzntnisialgusszjij.supabase.co";
+const SUPABASE_KEY = "YOUR_SUPABASE_PUBLIC_ANON_KEY_HERE";
+
+// ✅ Import Supabase
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-// ✅ Ensure env.js loaded first
-if (!window.env) {
-  console.error('❌ env.js not loaded. Make sure it’s included above this script in index.html.');
-  throw new Error('Missing env.js');
-}
-
-// ✅ Destructure environment vars
-const { TMDB_KEY, SUPABASE_URL, SUPABASE_KEY } = window.env;
 
 // ✅ Initialize Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -72,7 +71,6 @@ function displayShow(show) {
     </div>
   `;
 
-  // Add listener for Add to Favorites
   document.getElementById('addFavoriteBtn').addEventListener('click', () => addFavorite(show));
 }
 
@@ -97,7 +95,7 @@ async function addFavorite(show) {
     loadFavorites();
   } catch (err) {
     console.error('Error adding favorite:', err);
-    alert('Error adding to favorites. See console.');
+    alert('Error adding to favorites. Check console.');
   }
 }
 
@@ -123,5 +121,6 @@ async function loadFavorites() {
     });
   } catch (err) {
     console.error('Error loading favorites:', err);
+    favoritesList.innerHTML = '<li>Error loading favorites. Check console.</li>';
   }
 }
