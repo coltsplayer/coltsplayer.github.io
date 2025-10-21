@@ -1,182 +1,127 @@
-// ✅ Import Supabase client (ESM build)
+// ✅ Import Supabase (ESM build)
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// ✅ Make sure env.js loaded first (defined window.env)
+// ✅ Ensure env.js loaded first
 if (!window.env) {
-  console.error('❌ env.js not loaded or malformed. Make sure <script src="env.js"></script> is above script.js in index.html.');
-  throw new Error('env.js missing');
+  console.error('❌ env.js not loaded. Make sure it’s included above this script in index.html.');
+  throw new Error('Missing env.js');
 }
 
-// ✅ Destructure environment variables from env.js
+// ✅ Destructure environment vars
 const { TMDB_KEY, SUPABASE_URL, SUPABASE_KEY } = window.env;
 
-// ✅ Initialize Supabase client
+// ✅ Initialize Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+console.log('✅ Supabase connected:', SUPABASE_URL);
 
-console.log('✅ Environment loaded successfully:', { SUPABASE_URL, TMDB_KEY });
-
-// ✅ DOM Elements
+// ✅ DOM elements
 const searchBtn = document.getElementById('searchBtn');
 const searchInput = document.getElementById('searchInput');
 const showInfo = document.getElementById('showInfo');
 const favoritesList = document.getElementById('favoritesList');
 
-// ✅ Event Listeners
+// ✅ Event listeners
 searchBtn.addEventListener('click', searchShow);
 window.addEventListener('load', loadFavorites);
 
-// ✅ Search for a TV Show
+// ===============================
+// 🔍 Search for a TV Show
+// ===============================
 async function searchShow() {
   const query = searchInput.value.trim();
-  if (!query) return alert('Please enter a show name.');
-
-  showInfo.innerHTML = 'Loading...';
+  if (!query) {
+    alert('Please enter a show name.');
+    return;
+  }
 
   try {
-    const searchUrl = `https://api.themoviedb.org/3/search/tv?query=${encodeURIComponent(query)}`;
-    const searchRes = await fetch(searchUrl, {
-      headers: {
-        Authorization: TMDB_KEY,
-        'Content-Type': 'application/json;charset=utf-8',
-      },
-    });
+    const res = await fetch(`https://api.themoviedb.org/3/search/tv?query=${encodeURIComponent(query)}&api_key=${TMDB_KEY}`);
+    if (!res.ok) throw new Error(`TMDB request failed (${res.status})`);
 
-    const searchData = await searchRes.json();
-    if (!searchRes.ok) {
-      console.error('TMDB error:', searchData);
-      showInfo.innerHTML = `<p>API Error: ${searchData.status_message || 'Unauthorized'}</p>`;
+    const data = await res.json();
+    if (!data.results || data.results.length === 0) {
+      showInfo.innerHTML = `<p>No shows found for "${query}".</p>`;
       return;
     }
 
-    if (!searchData.results?.length) {
-      showInfo.innerHTML = '<p>No shows found.</p>';
-      return;
-    }
-
-    const show = searchData.results[0];
-    displayShowDetails(show.id);
+    const show = data.results[0];
+    displayShow(show);
   } catch (err) {
-    console.error('Error fetching show:', err);
-    showInfo.innerHTML = `<p>Unexpected error occurred.</p>`;
+    console.error('TMDB error:', err);
+    showInfo.innerHTML = `<p>❌ Error loading show info. Check console for details.</p>`;
   }
 }
 
-// ✅ Display Show Details
-async function displayShowDetails(showId) {
-  showInfo.innerHTML = 'Loading show details...';
+// ===============================
+// 📺 Display show info
+// ===============================
+function displayShow(show) {
+  const image = show.poster_path
+    ? `https://image.tmdb.org/t/p/w300${show.poster_path}`
+    : 'https://via.placeholder.com/300x450?text=No+Image';
 
-  try {
-    const detailsUrl = `https://api.themoviedb.org/3/tv/${showId}?append_to_response=credits`;
-    const detailsRes = await fetch(detailsUrl, {
-      headers: {
-        Authorization: TMDB_KEY,
-        'Content-Type': 'application/json;charset=utf-8',
-      },
-    });
-
-    const details = await detailsRes.json();
-
-    if (!detailsRes.ok) {
-      showInfo.innerHTML = `<p>Failed to load show details: ${details.status_message}</p>`;
-      return;
-    }
-
-    const nextSeason = details.next_episode_to_air
-      ? `Next season airs on: ${details.next_episode_to_air.air_date}`
-      : 'No upcoming season announced';
-
-    const topActors =
-      details.credits?.cast?.slice(0, 5).map((a) => a.name).join(', ') || 'N/A';
-
-    const { data: existing } = await supabase
-      .from('favorites')
-      .select('show_id')
-      .eq('show_id', showId)
-      .maybeSingle();
-
-    const isFavorited = !!existing;
-
-    showInfo.innerHTML = `
-      <div class="show-card">
-        <h2>${details.name} (${details.first_air_date?.slice(0, 4) || 'N/A'})</h2>
-        <img src="https://image.tmdb.org/t/p/w300${details.poster_path}" alt="${details.name}" />
-        <p><strong>Rating:</strong> ${details.vote_average}</p>
-        <p><strong>Seasons:</strong> ${details.number_of_seasons}</p>
-        <p><strong>Actors:</strong> ${topActors}</p>
-        <p><strong>Overview:</strong> ${details.overview}</p>
-        <p>${nextSeason}</p>
-        ${
-          isFavorited
-            ? `<button onclick="removeFavorite(${details.id})">❌ Remove from Favorites</button>`
-            : `<button onclick="saveFavorite(${details.id}, '${escapeQuotes(details.name)}', '${details.poster_path}')">❤️ Save to Favorites</button>`
-        }
+  showInfo.innerHTML = `
+    <div class="show-card">
+      <img src="${image}" alt="${show.name}" />
+      <div class="show-details">
+        <h2>${show.name}</h2>
+        <p><strong>First Air Date:</strong> ${show.first_air_date || 'Unknown'}</p>
+        <p>${show.overview || 'No description available.'}</p>
+        <button id="addFavoriteBtn">⭐ Add to Favorites</button>
       </div>
-    `;
+    </div>
+  `;
+
+  // Add listener for Add to Favorites
+  document.getElementById('addFavoriteBtn').addEventListener('click', () => addFavorite(show));
+}
+
+// ===============================
+// ⭐ Add to favorites
+// ===============================
+async function addFavorite(show) {
+  try {
+    const { error } = await supabase.from('favorites').insert([
+      {
+        show_id: show.id,
+        show_name: show.name,
+        poster_path: show.poster_path,
+        overview: show.overview,
+        first_air_date: show.first_air_date
+      }
+    ]);
+
+    if (error) throw error;
+
+    alert(`${show.name} added to favorites!`);
+    loadFavorites();
   } catch (err) {
-    console.error('Error loading details:', err);
-    showInfo.innerHTML = `<p>Error loading details.</p>`;
+    console.error('Error adding favorite:', err);
+    alert('Error adding to favorites. See console.');
   }
 }
 
-// ✅ Save Favorite to Supabase
-window.saveFavorite = async (id, title, poster) => {
-  try {
-    const { error } = await supabase
-      .from('favorites')
-      .insert([{ show_id: id, title, poster }]);
-    if (error) throw error;
-    alert('✅ Added to favorites!');
-    loadFavorites();
-  } catch (err) {
-    alert('❌ Error saving favorite: ' + err.message);
-  }
-};
-
-// ✅ Remove Favorite
-window.removeFavorite = async (id) => {
-  try {
-    const { error } = await supabase.from('favorites').delete().eq('show_id', id);
-    if (error) throw error;
-    alert('🗑️ Removed from favorites!');
-    loadFavorites();
-    showInfo.innerHTML = '';
-  } catch (err) {
-    alert('❌ Error removing favorite: ' + err.message);
-  }
-};
-
-// ✅ Load Favorites from Supabase
+// ===============================
+// 📋 Load favorites list
+// ===============================
 async function loadFavorites() {
-  const { data, error } = await supabase
-    .from('favorites')
-    .select('*')
-    .order('added_at', { ascending: false });
+  try {
+    const { data, error } = await supabase.from('favorites').select('*').order('added_at', { ascending: false });
+    if (error) throw error;
 
-  if (error) {
-    console.error('Error loading favorites:', error);
-    favoritesList.innerHTML = '<p>Could not load favorites.</p>';
-    return;
+    favoritesList.innerHTML = '';
+    if (!data || data.length === 0) {
+      favoritesList.innerHTML = '<li>No favorites saved yet.</li>';
+      return;
+    }
+
+    data.forEach((fav) => {
+      const li = document.createElement('li');
+      li.textContent = fav.show_name;
+      li.addEventListener('click', () => displayShow(fav));
+      favoritesList.appendChild(li);
+    });
+  } catch (err) {
+    console.error('Error loading favorites:', err);
   }
-
-  if (!data.length) {
-    favoritesList.innerHTML = '<p>No favorites saved yet.</p>';
-    return;
-  }
-
-  favoritesList.innerHTML = data
-    .map(
-      (f) => `
-      <div class="favorite-item" onclick="displayShowDetails(${f.show_id})">
-        <img src="https://image.tmdb.org/t/p/w200${f.poster}" alt="${f.title}" />
-        <p>${f.title}</p>
-        <button class="remove-btn" onclick="event.stopPropagation(); removeFavorite(${f.show_id});">Remove</button>
-      </div>
-    `
-    )
-    .join('');
-}
-
-// ✅ Helper: Escape Quotes
-function escapeQuotes(str) {
-  return str.replace(/'/g, "\\'");
 }
