@@ -1,14 +1,13 @@
-// ✅ Load environment variables from .env.js
-const { TMDB_KEY, SUPABASE_URL, SUPABASE_KEY } = window.env;
+// ✅ Import Supabase
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// ✅ Initialize Supabase client
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-// ✅ Import Supabase client
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+// ✅ Load environment variables (make sure env.js is loaded first via index.html)
+const { TMDB_KEY, SUPABASE_URL, SUPABASE_KEY } = window.env;
 
 // ✅ Initialize Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+console.log('✅ Environment loaded:', SUPABASE_URL);
 
 // ✅ DOM Elements
 const searchBtn = document.getElementById('searchBtn');
