@@ -1,13 +1,19 @@
-// ✅ Import Supabase
+// ✅ Import Supabase client (ESM build)
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// ✅ Load environment variables (make sure env.js is loaded first via index.html)
+// ✅ Make sure env.js loaded first (defined window.env)
+if (!window.env) {
+  console.error('❌ env.js not loaded or malformed. Make sure <script src="env.js"></script> is above script.js in index.html.');
+  throw new Error('env.js missing');
+}
+
+// ✅ Destructure environment variables from env.js
 const { TMDB_KEY, SUPABASE_URL, SUPABASE_KEY } = window.env;
 
-// ✅ Initialize Supabase
+// ✅ Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-console.log('✅ Environment loaded:', SUPABASE_URL);
+console.log('✅ Environment loaded successfully:', { SUPABASE_URL, TMDB_KEY });
 
 // ✅ DOM Elements
 const searchBtn = document.getElementById('searchBtn');
