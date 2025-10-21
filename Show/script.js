@@ -1,8 +1,9 @@
-// ✅ Load environment variables from env.js
-const TMDB_KEY = window.env.TMDB_KEY;
-const SUPABASE_URL = window.env.SUPABASE_URL;
-const SUPABASE_KEY = window.env.SUPABASE_KEY;
+// ✅ Load environment variables from .env.js
+const { TMDB_KEY, SUPABASE_URL, SUPABASE_KEY } = window.env;
 
+// ✅ Initialize Supabase client
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 // ✅ Import Supabase client
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
