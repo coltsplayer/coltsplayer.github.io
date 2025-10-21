@@ -2,9 +2,9 @@
 // ✅ API Keys
 // Replace these with your own keys
 // ===============================
-const TMDB_KEY = "YOUR_V3_TMDB_API_KEY_HERE"; // TMDB v3 API key
-const SUPABASE_URL = "https://qobzntnisialgusszjij.supabase.co";
-const SUPABASE_KEY = "YOUR_SUPABASE_PUBLIC_ANON_KEY_HERE";
+const TMDB_KEY = "e5991c2a3b29b1b804acfd34849e5b10"; // TMDB v3 API key
+const SUPABASE_URL = "https://uimrsmpjbweoohvbvywv.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbXJzbXBqYndlb29odmJ2eXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk4OTAxNTksImV4cCI6MjA3NTQ2NjE1OX0.QmU09jLhunbWKLAHM2ddGpsmgcBctw7ykX199Kmmn88";
 
 // ✅ Import Supabase
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
