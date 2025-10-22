@@ -1,0 +1,112 @@
+/* General Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #000;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Header */
+header h1 {
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+/* Search Section */
+.search {
+  margin-bottom: 30px;
+}
+
+.search input {
+  padding: 10px;
+  font-size: 1rem;
+  width: 60%;
+  max-width: 300px;
+  border-radius: 5px;
+  border: none;
+}
+
+.search button {
+  padding: 10px 15px;
+  font-size: 1rem;
+  margin-left: 10px;
+  border-radius: 5px;
+  border: none;
+  background-color: #ff9800;
+  color: white;
+  cursor: pointer;
+}
+
+.search button:hover {
+  background-color: #e68900;
+}
+
+/* Show Info */
+.show-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #111;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 0 auto;
+  max-width: 400px;
+}
+
+.show-card img {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.show-details {
+  text-align: left;
+}
+
+.show-details h2 {
+  margin-bottom: 10px;
+}
+
+/* Favorites */
+.favorites-section {
+  margin-top: 40px;
+}
+
+.favorites-section h2 {
+  margin-bottom: 10px;
+}
+
+#favoritesList {
+  list-style: none;
+  padding: 0;
+}
+
+#favoritesList li {
+  padding: 10px;
+  margin: 5px;
+  background: #222;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#favoritesList li:hover {
+  background: #333;
+}
+
+/* Mobile Friendly */
+@media (max-width: 600px) {
+  .search input {
+    width: 70%;
+  }
+
+  .show-card {
+    max-width: 90%;
+  }
+}

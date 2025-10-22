@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TV Show Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>🎬 TV Show Tracker</h1>
+  </header>
+
+  <main>
+    <section class="search">
+      <input type="text" id="searchInput" placeholder="Enter a TV show name..." />
+      <button id="searchBtn">Search</button>
+    </section>
+
+    <section id="showInfo" class="show-info"></section>
+
+    <section class="favorites-section">
+      <h2>⭐ Favorites</h2>
+      <ul id="favoritesList"></ul>
+    </section>
+  </main>
+
+  <!-- ✅ Load main logic -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
