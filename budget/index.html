@@ -3,83 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Budget Tracker</title>
+  <title>💰 Budget Tracker Dashboard</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    body {
-      background-color: #111;
-      color: #fff;
-      font-family: "Poppins", sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      text-align: center;
-      padding: 1rem;
-      background: rgba(0, 224, 255, 0.15);
-      color: #00e0ff;
-    }
-
-    main {
-      padding: 1rem;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    #summary {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 2rem;
-      margin: 1rem auto;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    #summary span {
-      background: rgba(0, 224, 255, 0.1);
-      padding: 0.5rem 1rem;
-      border-radius: 10px;
-    }
-
-    #chartContainer {
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-      background: rgba(25, 25, 25, 0.8);
-      border-radius: 12px;
-      padding: 10px;
-      box-shadow: 0 0 15px rgba(0, 224, 255, 0.1);
-    }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
   <header>
-    <h1>💰 Budget Tracker</h1>
+    <h1>💰 Budget Tracker Dashboard</h1>
   </header>
 
   <main>
-    <!-- Full view elements -->
-    <section id="uploadSection">
+    <!-- Upload CSV -->
+    <section id="uploadSection" class="card">
+      <h2>📂 Import Transactions</h2>
       <input type="file" id="uploadCsv" accept=".csv" />
       <button id="loadBtn">Load Transactions</button>
+      <button id="insertBtn">Insert to Supabase</button>
+      <p id="uploadStatus"></p>
     </section>
 
-    <section id="summary">
-      <span id="totalExpenses">Expenses: $0</span>
-      <span id="totalIncome">Income: $0</span>
-      <span id="netTotal">Net: $0</span>
+    <!-- Summary -->
+    <section id="summary" class="card">
+      <h2>📊 Monthly Summary</h2>
+      <div>
+        <span id="totalExpenses">Expenses: $0</span>
+        <span id="totalIncome">Income: $0</span>
+        <span id="netTotal">Net: $0</span>
+      </div>
     </section>
 
-    <section id="chartContainer">
-      <canvas id="budgetChart" height="180"></canvas>
+    <!-- Charts -->
+    <section id="charts" class="card grid">
+      <div>
+        <h3>💸 Spending by Category</h3>
+        <canvas id="budgetChart" height="180"></canvas>
+      </div>
+      <div>
+        <h3>📈 Utility Trends</h3>
+        <canvas id="utilityTrendChart" height="180"></canvas>
+      </div>
     </section>
 
-    <section id="transactions">
-      <table id="dataTable" border="1" style="width:100%; margin-top:20px; text-align:center;">
+    <!-- Transactions -->
+    <section id="transactions" class="card">
+      <h2>🧾 Transactions</h2>
+      <table id="dataTable">
         <thead>
           <tr>
             <th>Date</th>
@@ -91,127 +61,32 @@
         <tbody></tbody>
       </table>
     </section>
+
+    <!-- Utilities -->
+    <section id="utilities" class="card">
+      <h2>💡 Utility Bill Averages</h2>
+      <table id="utilityTable">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Avg Amount</th>
+            <th>Months</th>
+            <th>Last Updated</th>
+          </tr>
+        </thead>
+        <tbody><tr><td colspan="4">Loading...</td></tr></tbody>
+      </table>
+      <div>
+        <button id="recalcBtn">🔁 Recalculate Averages</button>
+        <button id="refreshBtn">🔄 Refresh</button>
+      </div>
+    </section>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+  <footer>
+    <p>© 2025 Budget Tracker | Powered by Supabase</p>
+  </footer>
 
-    const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
-    const SUPABASE_KEY = "YOUR-ANON-KEY";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    const totalExpensesEl = document.getElementById("totalExpenses");
-    const totalIncomeEl = document.getElementById("totalIncome");
-    const netTotalEl = document.getElementById("netTotal");
-    const dataTableBody = document.querySelector("#dataTable tbody");
-
-    let chart;
-    let allData = [];
-
-    // Detect embed mode from query string
-    const isEmbed = window.location.search.includes("embed=true");
-
-    async function loadTransactions() {
-      const { data, error } = await supabase.from("transactions").select("*");
-      if (error) {
-        console.error(error);
-        return;
-      }
-      allData = data;
-      renderTable();
-      renderSummary();
-      renderChart();
-    }
-
-    function renderTable() {
-      dataTableBody.innerHTML = "";
-      for (const row of allData) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row.date || ""}</td>
-          <td>${row.description || ""}</td>
-          <td>${row.category || ""}</td>
-          <td style="color:${row.amount < 0 ? "red" : "lime"}">
-            ${row.amount.toFixed(2)}
-          </td>`;
-        dataTableBody.appendChild(tr);
-      }
-    }
-
-    function renderSummary() {
-      const expenses = allData
-        .filter((r) => r.amount < 0)
-        .reduce((sum, r) => sum + r.amount, 0);
-      const income = allData
-        .filter((r) => r.amount > 0)
-        .reduce((sum, r) => sum + r.amount, 0);
-      const net = income + expenses;
-
-      totalExpensesEl.textContent = `Expenses: $${Math.abs(expenses).toFixed(2)}`;
-      totalIncomeEl.textContent = `Income: $${income.toFixed(2)}`;
-      netTotalEl.textContent = `Net: $${net.toFixed(2)}`;
-    }
-
-    function renderChart() {
-      const ctx = document.getElementById("budgetChart").getContext("2d");
-
-      const categories = {};
-      for (const row of allData) {
-        const cat = row.category || "Other";
-        if (!categories[cat]) categories[cat] = 0;
-        categories[cat] += row.amount;
-      }
-
-      const labels = Object.keys(categories);
-      const values = Object.values(categories);
-
-      if (chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: "Amount",
-              data: values,
-              backgroundColor: values.map((v) =>
-                v >= 0 ? "rgba(0,255,100,0.5)" : "rgba(255,80,80,0.5)"
-              ),
-            },
-          ],
-        },
-        options: {
-          plugins: {
-            legend: { display: false },
-          },
-          scales: {
-            x: { ticks: { color: "#fff" } },
-            y: { ticks: { color: "#fff" } },
-          },
-        },
-      });
-    }
-
-    // Simplify UI for embed mode
-    function applyEmbedMode() {
-      document.querySelector("header h1").textContent = "📊 Budget Snapshot";
-      document.getElementById("uploadSection").classList.add("hidden");
-      document.getElementById("transactions").classList.add("hidden");
-      document.body.style.background = "#111";
-      document.body.style.overflow = "hidden";
-      document.querySelector("main").style.padding = "0.5rem";
-      document.getElementById("chartContainer").style.maxWidth = "400px";
-      document.getElementById("chartContainer").style.height = "200px";
-      document.getElementById("summary").style.fontSize = "1rem";
-      document.getElementById("summary").style.gap = "1rem";
-    }
-
-    loadTransactions().then(() => {
-      if (isEmbed) {
-        applyEmbedMode();
-      }
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
