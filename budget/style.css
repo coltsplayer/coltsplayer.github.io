@@ -1,173 +1,100 @@
-:root {
-  --blue: #2563eb;
-  --blue-2: #1e40af;
-  --green: #16a34a;
-  --red: #dc2626;
-  --gray: #64748b;
-  --light: #f8fafc;
-  --white: #ffffff;
-}
-
-/* Base layout */
 body {
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family: "Segoe UI", sans-serif;
+  background: #111;
+  color: #fff;
   margin: 0;
-  background: var(--light);
-  color: #0f172a;
+  padding: 0;
 }
 
 header {
-  background: linear-gradient(90deg, var(--blue), var(--blue-2));
-  color: white;
   text-align: center;
-  padding: 1.5rem;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  background: rgba(0, 224, 255, 0.15);
+  color: #00e0ff;
+  padding: 1rem;
 }
 
-header h1 {
-  margin: 0;
-  font-size: 1.8rem;
-}
-
-header p {
-  margin-top: 0.5rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.95rem;
-}
-
-.container {
+main {
+  padding: 1rem;
   max-width: 1100px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  margin: auto;
 }
 
-/* Card styling */
 .card {
-  background: var(--white);
+  background: rgba(25, 25, 25, 0.9);
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.5rem;
   margin-bottom: 1.5rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 10px rgba(0, 224, 255, 0.1);
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+.card h2, .card h3 {
+  color: #00e0ff;
+  border-left: 4px solid #00e0ff;
+  padding-left: 8px;
 }
 
-.card h2,
-.card h3 {
-  border-left: 5px solid var(--blue);
-  padding-left: 0.5rem;
-  color: var(--blue-2);
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
-/* Buttons */
-.btn {
-  border: none;
-  border-radius: 6px;
-  padding: 0.6rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn.primary {
-  background: var(--blue);
-  color: white;
-}
-
-.btn.success {
-  background: var(--green);
-  color: white;
-}
-
-.btn:hover {
-  opacity: 0.9;
-}
-
-/* Tables */
-.table {
+table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
 }
 
-.table th,
-.table td {
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0.7rem;
+th, td {
+  border: 1px solid #333;
+  padding: 6px 10px;
+  text-align: center;
 }
 
-.table th {
-  background: #f1f5f9;
-  text-align: left;
-  color: #1e293b;
+th {
+  background: rgba(0, 224, 255, 0.1);
+  color: #00e0ff;
 }
 
-.table tr:nth-child(even) {
-  background: #f9fafb;
-}
-
-.table tr:hover {
-  background: #f1f5ff;
-}
-
-/* Forms */
-.row {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  flex-wrap: wrap;
-}
-
-input[type="text"],
-input[type="number"],
-input[type="file"],
-select {
-  padding: 0.5rem;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-}
-
-/* Charts layout */
-.charts-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-}
-
-@media (max-width: 900px) {
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Section-specific */
-.section-upload h2 {
-  color: var(--green);
-}
-
-.section-utilities h2 {
-  color: var(--blue-2);
-}
-
-.section-summary .card.small {
-  border-left: 4px solid var(--blue);
-  background: #f0f9ff;
-}
-
-/* Utility table */
-.table.pretty td:first-child {
-  font-weight: 600;
-}
-
-/* Footer */
 footer {
   text-align: center;
   padding: 1rem;
-  background: #e2e8f0;
-  color: var(--gray);
-  font-size: 0.9rem;
+  color: #aaa;
+  background: #1a1a1a;
+}
+
+#mappingTable input {
+  width: 95%;
+  background: #222;
+  border: 1px solid #00e0ff;
+  color: #fff;
+  border-radius: 4px;
+  padding: 4px 6px;
+}
+
+#mappingTable button {
+  background: rgba(0, 224, 255, 0.15);
+  color: #00e0ff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+#mappingTable button:hover {
+  background: rgba(0, 224, 255, 0.25);
+}
+
+#monthFilterContainer select,
+#monthFilterContainer button {
+  background: #111;
+  color: #00e0ff;
+  border: 1px solid #00e0ff;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+#monthFilterContainer button:hover {
+  background: #00e0ff;
+  color: #000;
 }
