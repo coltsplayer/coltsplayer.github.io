@@ -98,3 +98,10 @@ footer {
   background: #00e0ff;
   color: #000;
 }
+
+/* Prevent wrapping and widen date column */
+#dataTable td:first-child,
+#dataTable th:first-child {
+  white-space: nowrap;
+  width: 140px;
+}
