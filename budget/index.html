@@ -189,56 +189,65 @@
 
     <div id="filterSummary">Showing all transactions</div>
 
-    <label for="sourceFilter">Source:</label>
-    <select id="sourceFilter">
-      <option value="">All</option>
-      <option value="Checking">Checking</option>
-      <option value="Savings">Savings</option>
-      <option value="Mastercard">Mastercard</option>
-      <option value="Visa">Visa</option>
-      <option value="Amex">Amex</option>
-    </select>
-
-
-    <section id="transactions">
+      <section id="transactions">
       <!-- Month/category filters dynamically inserted here -->
-      <table id="dataTable">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+            <tbody></tbody>
+        </table>
+      </section>
+
+    <section class="card" id="uncatSection">
+      <h2>🗂 Uncategorized Summary</h2>
+      <p>Shows all uncategorized descriptions with their frequency.</p>
+      <button id="refreshUncatBtn">🔄 Refresh</button>
+      <table id="uncatTable" style="width:100%;margin-top:10px;border-collapse:collapse;">
         <thead>
-          <tr>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Category</th>
-            <th>Amount</th>
-            <th>Source</th>
-          </tr>
+          <tr><th>Description</th><th>Count</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </section>
 
-    <section id="mappingManager" style="margin-top:40px;">
-      <h2 style="text-align:center;color:#00e0ff;">Description Mapping Manager</h2>
-      <form id="mappingForm">
-        <input type="hidden" id="mappingId" />
-        <input type="text" id="matchPattern" placeholder="Match Pattern" />
-        <input type="text" id="displayName" placeholder="Display Name" />
-        <input type="text" id="categoryName" placeholder="Category" />
-        <button type="submit">Save</button>
-        <button type="button" id="resetForm">Reset</button>
-      </form>
+    <!-- 🔧 Description Mapping Manager -->
+    <section class="card" id="mappingManager">
+      <h2>🧩 Description Mapping Manager</h2>
+      <p>Use this tool to map transaction descriptions to categories.</p>
 
-      <table id="mappingTable" style="margin-top:10px;">
-        <thead>
-          <tr>
-            <th>Pattern</th>
-            <th>Display Name</th>
-            <th>Category</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+      <div style="margin:10px 0;">
+        <label>Description to Map:</label><br>
+        <input type="text" id="mapDescriptionInput" placeholder="Enter or click from Uncategorized list"
+              style="width:100%;padding:8px;margin:4px 0;border-radius:6px;border:1px solid #333;background:#111;color:#fff;">
+        <label>Display Text</label>
+        <input id="mapDisplayInput" placeholder="Optional friendly label (e.g. Walmart)">              
+      </div>
+
+      <div style="margin:10px 0;">
+        <label>Category:</label><br>
+        <input type="text" id="mapCategoryInput" placeholder="Enter category name"
+              style="width:100%;padding:8px;margin:4px 0;border-radius:6px;border:1px solid #333;background:#111;color:#fff;">
+      </div>
+
+      <button id="saveMappingBtn" style="background:#00e0ff;color:#000;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;">💾 Save Mapping</button>
+    </section>
+
+    <section id="mappingList" class="card">
+      <h2>🔖 Saved Mappings</h2>
+      <table id="mappingTable" style="width:100%;border-collapse:collapse;">
+        <thead><tr><th>Description</th><th>Category</th><th>Display</th></tr></thead>
         <tbody></tbody>
       </table>
     </section>
+
+
   </main>
 
   <!-- Supabase + Chart.js -->

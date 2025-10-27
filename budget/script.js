@@ -1,16 +1,16 @@
 /******************************************************************************
  * script.js
  *
- * Full, final version for your Budget Tracker app.
+ * Full, final version for your Budget Tracker app (merged + upgraded).
  *
- * Requirements:
+ * Note:
  *  - index.html must include:
  *      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
  *      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+ *      <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
  *      and then <script src="script.js"></script>
- *  - DOM element IDs must match those used below (see index.html we created).
  *
- * Replace SUPABASE_URL and SUPABASE_KEY with your project values.
+ *  - DOM element IDs must match those used below (see index.html we created).
  ******************************************************************************/
 
 /* ============================
@@ -19,68 +19,10 @@
 // Use window.supabase.createClient because we load supabase-js via CDN in index.html
 const SUPABASE_URL = "https://uimrsmpjbweoohvbvywv.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbXJzbXBqYndlb29odmJ2eXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk4OTAxNTksImV4cCI6MjA3NTQ2NjE1OX0.QmU09jLhunbWKLAHM2ddGpsmgcBctw7ykX199Kmmn88";
-// const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// then require login before showing data
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
 let allData = [];
-
-// ----------------------------------------------
-// Show login modal until authenticated
-// ----------------------------------------------
-document.addEventListener("DOMContentLoaded", async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    currentUser = user;
-    hideLoginModal();
-    loadTransactionsFromSupabase();
-  } else {
-    showLoginModal();
-  }
-});
-
-// ----------------------------------------------
-// Login UI logic
-// ----------------------------------------------
-function showLoginModal() {
-  document.getElementById("loginModal").style.display = "flex";
-}
-function hideLoginModal() {
-  document.getElementById("loginModal").style.display = "none";
-}
-
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value.trim();
-  const msg = document.getElementById("loginMsg");
-  msg.textContent = "Signing in...";
-
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    msg.textContent = "❌ " + error.message;
-    return;
-  }
-
-  currentUser = data.user;
-  msg.textContent = "✅ Logged in!";
-  setTimeout(() => {
-    hideLoginModal();
-    loadTransactionsFromSupabase();
-  }, 600);
-});
-
-// Optional: auto-react to login/logout events
-supabase.auth.onAuthStateChange((_event, session) => {
-  if (session?.user) {
-    currentUser = session.user;
-    hideLoginModal();
-    loadTransactionsFromSupabase();
-  } else {
-    currentUser = null;
-    showLoginModal();
-  }
-});
 
 /* ============================
    Global state
@@ -97,7 +39,7 @@ let utilityTrendChart = null;
 /* ============================
    DOM references
    ============================ */
-const uploadInput = document.getElementById("uploadCsv");
+const uploadInput = document.getElementById("uploadCsv") || document.getElementById("fileInput");
 const sourceInput = document.getElementById("sourceInput"); // the select for source when uploading
 const loadBtn = document.getElementById("loadBtn");
 const insertBtn = document.getElementById("insertBtn");
@@ -165,18 +107,74 @@ function palette(i) {
 }
 
 /* ============================
-   Initialization
+   Authentication UI & flow
    ============================ */
+
+// Show/hide login modal; login button handling
 document.addEventListener("DOMContentLoaded", async () => {
   // Load description mappings first (so preview mapping works)
   await loadDescriptionMap();
 
-  // Load transactions & utilities from Supabase
-  await loadTransactionsFromSupabase();
-  await loadUtilities();
+  // Check current session & wire up handlers
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    currentUser = user;
+    hideLoginModal();
+    await loadTransactionsFromSupabase();
+    await loadUtilities();
+  } else {
+    showLoginModal();
+  }
 
-  // Wire other UI event handlers
+  // Wire event handlers for existing UI
   wireUpEventHandlers();
+});
+
+// ----------------------------------------------
+// Login modal controls (index.html should include the modal)
+// ----------------------------------------------
+function showLoginModal() {
+  const el = document.getElementById("loginModal");
+  if (el) el.style.display = "flex";
+}
+function hideLoginModal() {
+  const el = document.getElementById("loginModal");
+  if (el) el.style.display = "none";
+}
+
+document.getElementById("loginBtn")?.addEventListener("click", async () => {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+  const msg = document.getElementById("loginMsg");
+  if (msg) msg.textContent = "Signing in...";
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    if (msg) msg.textContent = "❌ " + error.message;
+    console.error("Login error:", error);
+    return;
+  }
+
+  currentUser = data.user;
+  if (msg) msg.textContent = "✅ Logged in!";
+  setTimeout(async () => {
+    hideLoginModal();
+    await loadTransactionsFromSupabase();
+    await loadUtilities();
+  }, 500);
+});
+
+// react to auth state changes
+supabase.auth.onAuthStateChange((_event, session) => {
+  if (session?.user) {
+    currentUser = session.user;
+    hideLoginModal();
+    loadTransactionsFromSupabase();
+    loadUtilities();
+  } else {
+    currentUser = null;
+    showLoginModal();
+  }
 });
 
 /* ============================
@@ -187,6 +185,70 @@ function wireUpEventHandlers() {
   if (insertBtn) insertBtn.addEventListener("click", handleInsertClick);
   if (mappingForm) mappingForm.addEventListener("submit", handleMappingFormSubmit);
   if (resetFormBtn) resetFormBtn.addEventListener("click", resetMappingForm);
+
+  // Export buttons handled below (DOMContentLoaded listener created earlier in original)
+  // Add mapping save button (for click-to-map flow)
+  const saveMappingBtn = document.getElementById("saveMappingBtn");
+  if (saveMappingBtn) {
+    saveMappingBtn.addEventListener("click", async () => {
+      // Prefer mappingForm submit if present
+      if (mappingForm) {
+        mappingForm.dispatchEvent(new Event("submit", { cancelable: true }));
+        return;
+      }
+      // Fallback: use mapDescriptionInput/mapCategoryInput fields if present
+      const desc = document.getElementById("mapDescriptionInput")?.value?.trim();
+      const cat = document.getElementById("mapCategoryInput")?.value?.trim();
+      if (!desc || !cat) {
+        alert("Please enter both a description and a category.");
+        return;
+      }
+      // Save mapping (uses same structure as mapping form)
+      try {
+        const { data: inserted, error } = await supabase
+          .from("description_mappings")
+          .insert([{ 
+            description: desc,
+            category: cat,
+            user_id: currentUser.id,
+            match_pattern: desc.toLowerCase(),
+            display_text: displayText  }])
+          .select();
+        if (error) throw error;
+        alert(`✅ Mapping saved: "${desc}" → "${cat}"`);
+        await loadDescriptionMap();
+        await applyMappingToUncategorized(desc, cat);
+        await renderMappingsList();
+        await applyAllMappingsToUncategorized();
+      } catch (err) {
+        console.error("Save mapping error (fallback):", err);
+        alert("Failed to save mapping (see console).");
+      }
+    });
+  }
+
+  // File input 'fileInput' may be used for XLSX export usage in other code; keep parse handler below
+  document.getElementById("fileInput")?.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const rows = parseCsvBasic ? parseCsvBasic(text) : parseCsv(text);
+    rows.forEach(r => r.Source = sourceInput?.value?.trim() || r.source || "CSV");
+    allData = rows;
+    renderTransactionsPreview();
+    buildMonthFilterFromData(allData); // builds filters from preview data too
+    alert(`Loaded ${rows.length} rows from CSV (preview).`);
+  });
+
+  // Refresh uncat btn (if present)
+  document.getElementById("refreshUncatBtn")?.addEventListener("click", renderUncategorizedSummary);
+
+  // Logout button (optional)
+  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    currentUser = null;
+    showLoginModal();
+  });
 }
 
 /* ============================
@@ -201,16 +263,47 @@ function wireUpEventHandlers() {
 
 function parseCsvBasic(text) {
   // remove BOM
-  let cleaned = text.replace(/^\uFEFF/, "");
-  const lines = cleaned.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  if (lines.length === 0) return [];
-  const headers = lines.shift().split(",").map(h => h.trim());
-  return lines.map(line => {
-    const cols = line.split(",");
-    const obj = {};
-    headers.forEach((h, i) => obj[h.trim()] = cols[i] !== undefined ? cols[i].trim() : "");
-    return obj;
-  });
+  const lines = text.trim().split(/\r?\n/);
+  const header = lines[0].split(",");
+
+  // Detect common formats by header patterns or position
+  let mode = "standard";
+  if (header[0].toLowerCase().includes("transaction date") || header[2]?.toLowerCase().includes("description")) {
+    mode = "discover";
+  }
+
+  const transactions = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(",");
+    if (cols.length < 3) continue;
+
+    let date, description, amount;
+
+    if (mode === "discover") {
+      date = parseValidDate(cols[0]);
+      description = cols[2].trim();
+      amount = parseFloat(cols[3]) || 0;
+    } else {
+      // fallback standard layout (Date, Description, Amount)
+      date = parseValidDate(cols[0]);
+      description = cols[1].trim();
+      amount = parseFloat(cols[2]) || 0;
+    }
+
+    if (!date || !description) continue;
+
+    transactions.push({
+      date,
+      description,
+      amount,
+      category: "Uncategorized",
+      source: mode === "discover" ? "Discover" : "CSV",
+    });
+  }
+
+  console.log(`[budget] Parsed ${transactions.length} ${mode} transactions`);
+  return transactions;
 }
 
 function handleLoadCsvClick() {
@@ -250,7 +343,7 @@ function handleLoadCsvClick() {
 
 async function loadDescriptionMap() {
   try {
-    const { data, error } = await supabase.from("description_mapping").select("*").order("id", { ascending: true });
+    const { data, error } = await supabase.from("description_mappings").select("*").order("id", { ascending: true });
     if (error) {
       console.error("Error loading description mapping:", error);
       descriptionMap = [];
@@ -300,7 +393,7 @@ function renderMappingTable() {
       const id = Number(e.currentTarget.closest("tr").dataset.id);
       if (!confirm("Delete mapping?")) return;
       try {
-        const { error } = await supabase.from("description_mapping").delete().eq("id", id);
+        const { error } = await supabase.from("description_mappings").delete().eq("id", id);
         if (error) throw error;
         await loadDescriptionMap();
       } catch (err) {
@@ -333,7 +426,7 @@ function startInlineEdit(tr) {
     const newCategory = tr.querySelector(".edit-category").value.trim() || "Uncategorized";
     if (!newPattern || !newName) { alert("Pattern and display name required."); return; }
     try {
-      const { error } = await supabase.from("description_mapping").update({
+      const { error } = await supabase.from("description_mappings").update({
         match_pattern: newPattern, display_name: newName, category: newCategory
       }).eq("id", id);
       if (error) throw error;
@@ -351,23 +444,23 @@ function startInlineEdit(tr) {
 
 async function handleMappingFormSubmit(evt) {
   evt.preventDefault();
-  const id = mappingIdInput.value ? Number(mappingIdInput.value) : null;
-  const match_pattern = matchPatternInput.value.trim();
-  const display_name = displayNameInput.value.trim();
-  const category = categoryNameInput.value.trim() || "Uncategorized";
+  const id = mappingIdInput?.value ? Number(mappingIdInput.value) : null;
+  const match_pattern = matchPatternInput?.value.trim();
+  const display_name = displayNameInput?.value.trim();
+  const category = categoryNameInput?.value.trim() || "Uncategorized";
   if (!match_pattern || !display_name) {
     alert("Please provide pattern and display name.");
     return;
   }
   try {
     if (id) {
-      const { error } = await supabase.from("description_mapping").update({
+      const { error } = await supabase.from("description_mappings").update({
         match_pattern, display_name, category
       }).eq("id", id);
       if (error) throw error;
       alert("Mapping updated.");
     } else {
-      const { error } = await supabase.from("description_mapping").insert([{ match_pattern, display_name, category }]);
+      const { error } = await supabase.from("description_mappings").insert([{ match_pattern, display_name, category }]);
       if (error) throw error;
       alert("Mapping added.");
     }
@@ -380,10 +473,10 @@ async function handleMappingFormSubmit(evt) {
 }
 
 function resetMappingForm() {
-  mappingIdInput.value = "";
-  matchPatternInput.value = "";
-  displayNameInput.value = "";
-  categoryNameInput.value = "";
+  if (mappingIdInput) mappingIdInput.value = "";
+  if (matchPatternInput) matchPatternInput.value = "";
+  if (displayNameInput) displayNameInput.value = "";
+  if (categoryNameInput) categoryNameInput.value = "";
 }
 
 /* ============================
@@ -450,7 +543,7 @@ async function handleInsertClick() {
     const { data, error } = await supabase.from("transactions").insert(clean.map(row => ({
       ...row,
       user_id: currentUser?.id,   // 👈 REQUIRED for RLS policies
-      })));
+    })));
     if (error) {
       console.error("Insert error:", error);
       alert(`Insert failed: ${error.message || JSON.stringify(error)}`);
@@ -469,7 +562,6 @@ async function handleInsertClick() {
 /* ============================
    Load transactions from Supabase & render
    ============================ */
-// Replace your existing loadTransactionsFromSupabase with this
 async function loadTransactionsFromSupabase() {
   if (!currentUser) {
     console.warn("No user logged in.");
@@ -507,9 +599,9 @@ async function loadTransactionsFromSupabase() {
   renderBudgetChartFromData(allData);
 }
 
-// ============================
-// Export to CSV / XLSX
-// ============================
+/* ============================
+   Export to CSV / XLSX
+   ============================ */
 document.addEventListener("DOMContentLoaded", () => {
   const csvBtn = document.getElementById("exportCsvBtn");
   const xlsxBtn = document.getElementById("exportXlsxBtn");
@@ -577,11 +669,6 @@ function exportToXlsx() {
    Filters: month, category, source and filter summary
    ============================ */
 
-/**
- * buildMonthFilterFromData
- * Creates the filter controls dynamically above the transactions table.
- * Also creates re-map and suggest buttons.
- */
 function buildMonthFilterFromData(data) {
   // gather months & categories & sources
   const months = new Set();
@@ -678,7 +765,7 @@ function buildMonthFilterFromData(data) {
   });
 
   suggestBtn.addEventListener("click", async () => {
-    await suggestMappingsForUncategorized();
+    await suggestCategoriesForUncategorized();
   });
 }
 
@@ -686,7 +773,8 @@ function buildMonthFilterFromData(data) {
    Render grouped transactions (collapsible by month)
    ============================ */
 
-// Replace your existing renderTransactionsGroupedByMonth with this improved version
+// This function keeps your previous advanced table rendering behavior.
+// It includes editable fields, save logic, cancel, and re-rendering.
 function renderTransactionsGroupedByMonth(data) {
   if (!dataTableBody) return;
   dataTableBody.innerHTML = "";
@@ -768,7 +856,7 @@ function renderTransactionsGroupedByMonth(data) {
       const amtVal = formatMoney(r.amount);
 
       tr.innerHTML = `
-        <td><input type="date" class="tx-date" value="${dateVal}" disabled style="background:#111;color:#fff;border:1px solid #333;border-radius:4px;padding:2px 4px;width:135px;" /></td>
+        <td><input type="date" class="tx-date" value="${dateVal}" disabled style="background:#111;color:#fff;border:1px solid #333;border-radius:4px;padding:2px 4px;width:140px;white-space:nowrap" /></td>
         <td><input type="text" class="tx-desc" value="${descVal}" disabled style="width:220px;background:#111;color:#fff;border:1px solid #333;border-radius:4px;padding:2px 4px;" /></td>
         <td>
           <select class="tx-cat" disabled style="width:150px;background:#111;color:#fff;border:1px solid #333;border-radius:4px;padding:2px 4px;">
@@ -824,64 +912,77 @@ function renderTransactionsGroupedByMonth(data) {
       });
 
       // Save - robustly update DB and then update local state to re-render fast
-    saveBtn.addEventListener("click", async () => {
-      if (!r.id) {
-        alert("⚠️ This row does not have an ID. Only saved transactions can be updated.");
-        console.warn("Missing ID for transaction:", r);
-        return;
-      }
-
-      const newDate = parseValidDate(tr.querySelector(".tx-date").value.trim());
-      const newDesc = tr.querySelector(".tx-desc").value.trim();
-      const newCat = tr.querySelector(".tx-cat").value.trim() || "Uncategorized";
-      const newAmt = parseFloat(tr.querySelector(".tx-amt").value) || 0;
-
-      saveBtn.disabled = true;
-      saveBtn.textContent = "⏳";
-
-      try {
-        console.log(`[budget] updating id=${r.id}`, { newDate, newDesc, newCat, newAmt });
-
-        const { data, error, count } = await supabase
-          .from("transactions")
-          .update({
-            date: newDate,
-            description: newDesc,
-            category: newCat,
-            amount: newAmt,
-          })
-          .eq("id", String(r.id))  // 👈 make sure it's a string if UUID
-          .select();
-
-        if (error) {
-          console.error("[budget] Update failed:", error);
-          alert(`❌ Update failed: ${error.message}`);
+      saveBtn.addEventListener("click", async () => {
+        if (!r.id) {
+          alert("⚠️ This row does not have an ID. Only saved transactions can be updated.");
+          console.warn("Missing ID for transaction:", r);
           return;
         }
 
-        if (!data || !data.length) {
-          console.warn("[budget] Update found no matching row. ID mismatch or RLS?");
-          alert("No matching record found to update — check console for details.");
-          return;
+        const newDate = parseValidDate(tr.querySelector(".tx-date").value.trim());
+        const newDesc = tr.querySelector(".tx-desc").value.trim();
+        const newCat = tr.querySelector(".tx-cat").value.trim() || "Uncategorized";
+        const newAmt = parseFloat(tr.querySelector(".tx-amt").value) || 0;
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = "⏳";
+
+        try {
+          console.log(`[budget] updating id=${r.id}`, { newDate, newDesc, newCat, newAmt });
+
+          const { data, error } = await supabase
+            .from("transactions")
+            .update({
+              date: newDate,
+              description: newDesc,
+              category: newCat,
+              amount: newAmt,
+            })
+            .eq("id", r.id)
+            .select(); // request rows back if DB supports it
+
+          if (error) {
+            console.error("[budget] Update failed:", error);
+            alert(`❌ Update failed: ${error.message || JSON.stringify(error)}`);
+            return;
+          }
+
+          if (!data || !data.length) {
+            console.warn("[budget] Update found no matching row. ID mismatch or RLS?");
+            alert("No matching record found to update — check console for details.");
+            return;
+          }
+
+          console.log("[budget] Update success:", data);
+
+          // Update local data so UI refreshes
+          const idx = allData.findIndex(x => x.id === r.id);
+          if (idx >= 0) {
+            allData[idx] = { ...allData[idx], date: newDate, description: newDesc, category: newCat, amount: newAmt };
+          }
+          renderTransactionsGroupedByMonth(allData);
+          alert("✅ Transaction updated successfully.");
+        } catch (err) {
+          console.error("[budget] Save exception:", err);
+          alert("Unexpected error during save (see console).");
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "💾";
         }
 
-        console.log("[budget] Update success:", data);
-
-        // Update local data so UI refreshes
-        const idx = allData.findIndex(x => x.id === r.id);
-        if (idx >= 0) {
-          allData[idx] = { ...allData[idx], date: newDate, description: newDesc, category: newCat, amount: newAmt };
-        }
-        renderTransactionsGroupedByMonth(allData);
-        alert("✅ Transaction updated successfully.");
-      } catch (err) {
-        console.error("[budget] Save exception:", err);
-        alert("Unexpected error during save (see console).");
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = "💾";
-      }
-    });
+        // Collapse all months by default
+        document.querySelectorAll(".month-group").forEach(section => {
+          const header = section.querySelector(".month-header");
+          const body = section.querySelector(".month-body");
+          if (body && header) {
+            body.style.display = "none";
+            header.style.cursor = "pointer";
+            header.addEventListener("click", () => {
+              body.style.display = body.style.display === "none" ? "block" : "none";
+            });
+          }
+        });
+      });
     });
   });
 }
@@ -1001,11 +1102,6 @@ async function renderUtilityTrendChart() {
    Re-map & Suggest helpers
    ============================ */
 
-/**
- * reMapUncategorizedTransactions
- * - Re-applies mapping logic for all transactions where category='Uncategorized'
- * - Updates those rows in Supabase and refreshes the local view
- */
 async function reMapUncategorizedTransactions() {
   if (!confirm("Re-run mapping for all Uncategorized transactions?")) return;
   try {
@@ -1036,7 +1132,7 @@ async function reMapUncategorizedTransactions() {
       return;
     }
 
-    // Batch / sequential updates - Supabase doesn't have multi-row upsert with differing keys, so update individually
+    // Update individually
     let successCount = 0;
     for (const u of updates) {
       const { error } = await supabase.from("transactions").update({
@@ -1055,76 +1151,58 @@ async function reMapUncategorizedTransactions() {
   }
 }
 
-/**
- * suggestMappingsForUncategorized
- * - Finds possible mappings for uncategorized transactions and shows them
- * - This function currently shows suggestions in an alert; we can upgrade to inline picks later
- */
-async function suggestMappingsForUncategorized() {
-  try {
-    const { data: uncategorized, error: loadErr } = await supabase
-      .from("transactions")
-      .select("id, description")
-      .eq("category", "Uncategorized");
-    if (loadErr) throw loadErr;
-    if (!uncategorized || !uncategorized.length) {
-      alert("No Uncategorized transactions found.");
-      return;
+// ===============================
+// 💡 Improved Category Suggestions
+// ===============================
+function suggestCategoryFor(description) {
+  if (!description || !description.trim()) return null;
+
+  const desc = description.toLowerCase();
+
+  // Get all known mappings or transactions that already have a category
+  const known = allData
+    .filter(r => r.category && r.category !== "Uncategorized" && r.description)
+    .map(r => ({
+      description: r.description.toLowerCase(),
+      category: r.category
+    }));
+
+  // Find best match using keyword overlap or substring
+  let best = null;
+  let score = 0;
+
+  for (const item of known) {
+    if (item.description === desc) {
+      return item.category; // exact match
     }
 
-    await loadDescriptionMap();
-
-    // Helper to compute similarity between two strings
-    function similarity(a, b) {
-      if (!a || !b) return 0;
-      const aWords = a.toUpperCase().replace(/[^A-Z0-9\s]/g, "").split(/\s+/).filter(Boolean);
-      const bWords = b.toUpperCase().replace(/[^A-Z0-9\s]/g, "").split(/\s+/).filter(Boolean);
-      const matchCount = aWords.filter(w => bWords.includes(w)).length;
-      const totalWords = Math.max(aWords.length, bWords.length);
-      return totalWords === 0 ? 0 : matchCount / totalWords;
+    // partial match based on shared words
+    const wordsA = new Set(desc.split(/\s+/));
+    const wordsB = new Set(item.description.split(/\s+/));
+    const common = [...wordsA].filter(w => wordsB.has(w)).length;
+    if (common > score) {
+      score = common;
+      best = item.category;
     }
-
-    const suggestions = [];
-    for (const tx of uncategorized) {
-      const desc = tx.description || "";
-      const scored = descriptionMap.map(m => ({
-        ...m,
-        score: similarity(desc, m.match_pattern)
-      }));
-      const bestMatches = scored
-        .filter(x => x.score >= 0.4)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3);
-
-      if (bestMatches.length > 0) {
-        suggestions.push({
-          id: tx.id,
-          description: desc,
-          matches: bestMatches
-        });
-      }
-    }
-
-    if (!suggestions.length) {
-      alert("No good suggestions found for Uncategorized transactions.");
-      return;
-    }
-
-    let msg = "💡 Suggested Matches for Uncategorized Transactions:\n\n";
-    suggestions.forEach(s => {
-      msg += `• ${s.description}\n`;
-      s.matches.forEach(m => {
-        msg += `   → ${m.display_name} (${m.category}) [${Math.round(m.score * 100)}%]\n`;
-      });
-      msg += "\n";
-    });
-
-    console.log("Suggestion details:", suggestions);
-    alert(msg);
-  } catch (err) {
-    console.error("suggestMappingsForUncategorized error:", err);
-    alert("Failed to suggest mappings (see console).");
   }
+
+  return best || null;
+}
+
+function suggestCategoriesForUncategorized() {
+  const uncategorized = allData.filter(r => !r.category || r.category === "Uncategorized");
+  let count = 0;
+
+  uncategorized.forEach(r => {
+    const suggestion = suggestCategoryFor(r.description);
+    if (suggestion) {
+      r.suggestedCategory = suggestion;
+      count++;
+    }
+  });
+
+  alert(`💡 Found ${count} possible suggestions.`);
+  renderTransactionsGroupedByMonth(allData);
 }
 
 /* ============================
@@ -1170,12 +1248,6 @@ function renderTransactionsPreview() {
 /* ============================
    Initialization helpers & tips
    ============================ */
-/*
- Tips:
- - If your CSV has quoted fields with commas, swap parseCsvBasic with PapaParse.
- - If you see RLS errors when inserting/updating in Supabase, add/adjust table policies in the Supabase SQL editor.
- - Use console.log(...) to inspect variables while debugging.
-*/
 
 /* ============================
    Exported small utilities (optional)
@@ -1185,6 +1257,215 @@ window._budgetApp = {
   loadDescriptionMap,
   loadTransactionsFromSupabase,
   reMapUncategorizedTransactions,
-  suggestMappingsForUncategorized,
+  suggestCategoriesForUncategorized,
   parseValidDate
 };
+
+/* ===============================
+   🗂 Uncategorized Summary Section
+   (already wired earlier; keep to ensure presence)
+   =============================== */
+function renderUncategorizedSummary() {
+  const tbody = document.querySelector("#uncatTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  const uncategorized = allData.filter(r => !r.category || r.category === "Uncategorized");
+  if (!uncategorized.length) {
+    tbody.innerHTML = `<tr><td colspan="2">🎉 No uncategorized transactions found!</td></tr>`;
+    return;
+  }
+
+  // Count by description
+  const counts = {};
+  uncategorized.forEach(r => {
+    const desc = (r.description || "").trim();
+    counts[desc] = (counts[desc] || 0) + 1;
+  });
+
+  // Sort by count descending
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+  entries.forEach(([desc, count]) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="uncat-desc" style="cursor:pointer;padding:6px;border-bottom:1px solid #333;color:#00e0ff;">${escapeHtml(desc)}</td>
+      <td style="text-align:right;padding:6px;border-bottom:1px solid #333;">${count}</td>
+    `;
+    tr.querySelector(".uncat-desc").addEventListener("click", () => {
+      openMappingForm(desc);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function openMappingForm(description) {
+  const descInput = document.getElementById("mapDescriptionInput");
+  const catInput = document.getElementById("mapCategoryInput");
+  if (!descInput || !catInput) {
+    alert("Mapping form not found in HTML.");
+    return;
+  }
+  descInput.value = description;
+  catInput.focus();
+  window.scrollTo({ top: descInput.offsetTop - 100, behavior: "smooth" });
+}
+
+/* ===============================
+   💾 Save Mapping + Apply It (APPLIED TO SAME TABLE SCHEMA)
+   - inserts into `description_mapping` using fields:
+     match_pattern, display_name, category
+   - then applies mapping to uncategorized transactions by substring match
+   =============================== */
+
+async function applyMappingToUncategorized(matchPattern, category) {
+  // lowercase match for comparison
+  const pat = matchPattern.toLowerCase();
+
+  const matches = allData.filter(r =>
+    (!r.category || r.category === "Uncategorized") &&
+    r.description &&
+    r.description.toLowerCase().includes(pat) &&
+    r.id // ensure only DB-backed rows
+  );
+
+  if (!matches.length) {
+    alert("No uncategorized transactions matched this description.");
+    return;
+  }
+
+  const ids = matches.map(r => r.id).filter(Boolean);
+  console.log(`[budget] Applying mapping "${matchPattern}" => "${category}" to ${ids.length} txns`);
+
+  try {
+    const { error } = await supabase
+      .from("transactions")
+      .update({ category, description: matchPattern })
+      .in("id", ids);
+
+    if (error) {
+      console.error("Apply mapping error:", error);
+      alert("Failed to apply mapping (see console).");
+      return;
+    }
+
+    // update local state
+    matches.forEach(r => {
+      r.category = category;
+      r.description = matchPattern;
+    });
+
+    renderTransactionsGroupedByMonth(allData);
+    renderUncategorizedSummary();
+
+    alert(`✅ Applied category "${category}" to ${ids.length} transactions.`);
+  } catch (err) {
+    console.error("applyMappingToUncategorized exception:", err);
+    alert("Failed to apply mapping (see console).");
+  }
+}
+
+/* ===============================
+   If the user clicks "Save Mapping" independent of mapping form submit,
+   insert into description_mapping (match_pattern/display_name/category)
+   then apply mapping immediately.
+   This listener was added earlier in wireUpEventHandlers but declare fallback here too.
+   =============================== */
+document.getElementById("saveMappingBtn").addEventListener("click", async () => {
+  const desc = document.getElementById("mapDescriptionInput").value.trim();
+  const cat = document.getElementById("mapCategoryInput").value.trim();
+  const displayText = document.getElementById("mapDisplayInput").value.trim() || desc;
+
+  if (!desc || !cat) {
+    alert("Please enter both a description and a category.");
+    return;
+  }
+
+  const { data: inserted, error } = await supabase
+    .from("description_mappings")
+    .insert([{ 
+      description: desc, 
+      category: cat, 
+      display_name: displayText,
+      match_pattern: desc.toLowerCase(),
+      user_id: currentUser.id
+    }])
+    .select();
+
+  if (error) {
+    console.error("Save mapping error:", error);
+    alert("Error saving mapping. See console for details.");
+    return;
+  }
+
+  console.log("Mapping saved:", inserted[0]);
+  alert(`✅ Mapping saved:\n"${desc}" → "${cat}"`);
+});
+
+// ====================================================
+// 🧩 Apply ALL Saved Mappings to Uncategorized
+// ====================================================
+async function applyAllMappingsToUncategorized() {
+  if (!currentUser) return;
+  const mappings = await loadDescriptionMappings();
+  if (!mappings.length) {
+    console.log("[budget] No mappings found.");
+    return;
+  }
+
+  const uncategorized = allData.filter(r => !r.category || r.category === "Uncategorized");
+  if (!uncategorized.length) {
+    console.log("[budget] No uncategorized transactions to map.");
+    return;
+  }
+
+  let updatedCount = 0;
+  for (const map of mappings) {
+    const descLower = (map.match_pattern || map.description).toLowerCase();
+    const matches = uncategorized.filter(r => r.description && r.description.toLowerCase().includes(descLower));
+    if (!matches.length) continue;
+
+    const ids = matches.map(r => r.id);
+    const { error } = await supabase.from("transactions").update({ category: map.category }).in("id", ids);
+    if (!error) {
+      updatedCount += matches.length;
+      matches.forEach(r => (r.category = map.category));
+    } else {
+      console.error("[budget] Mapping apply error:", error);
+    }
+  }
+
+  if (updatedCount > 0) {
+    renderTransactionsGroupedByMonth(allData);
+    renderUncategorizedSummary();
+    alert(`✅ ${updatedCount} transactions reclassified using saved mappings.`);
+  } else {
+    alert("No uncategorized transactions matched any mapping rules.");
+  }
+}
+
+// ====================================================
+// 📜 List All Mappings
+// ====================================================
+async function renderMappingsList() {
+  if (!currentUser) return;
+  const list = await loadDescriptionMappings();
+  const tbody = document.querySelector("#mappingTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="3">No saved mappings yet.</td></tr>`;
+    return;
+  }
+
+  for (const m of list) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="padding:6px;border-bottom:1px solid #333;">${escapeHtml(m.description)}</td>
+      <td style="padding:6px;border-bottom:1px solid #333;">${escapeHtml(m.category)}</td>
+      <td style="padding:6px;border-bottom:1px solid #333;">${escapeHtml(m.display_text || "")}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
