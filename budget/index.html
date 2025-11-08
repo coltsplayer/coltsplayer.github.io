@@ -1,249 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
->
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Budget Tracker</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    body {
-      background-color: #111;
-      color: #fff;
-      font-family: "Poppins", sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      text-align: center;
-      padding: 1rem;
-      background: rgba(0, 224, 255, 0.15);
-      color: #00e0ff;
-    }
-
-    main {
-      padding: 1rem;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    #summary {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 2rem;
-      margin: 1rem auto;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    #summary span {
-      background: rgba(0, 224, 255, 0.1);
-      padding: 0.5rem 1rem;
-      border-radius: 10px;
-    }
-
-    #chartContainer {
-      width: 100%;
-      max-width: 700px;
-      margin: 0 auto;
-      background: rgba(25, 25, 25, 0.8);
-      border-radius: 12px;
-      padding: 10px;
-      box-shadow: 0 0 15px rgba(0, 224, 255, 0.1);
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      background: rgba(20, 20, 20, 0.8);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 8px;
-      text-align: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    th {
-      background: rgba(0, 224, 255, 0.1);
-      color: #00e0ff;
-    }
-
-    button {
-      background: rgba(0, 224, 255, 0.15);
-      color: #00e0ff;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 10px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: rgba(0, 224, 255, 0.3);
-    }
-
-    #monthFilterContainer select,
-    #monthFilterContainer button {
-      background: #111;
-      color: #00e0ff;
-      border: 1px solid #00e0ff;
-      border-radius: 6px;
-      padding: 6px 10px;
-    }
-
-    #monthFilterContainer {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 10px;
-    }
-
-    #filterSummary {
-      text-align: center;
-      color: #00e0ff;
-      margin: 10px 0;
-      font-size: 0.9rem;
-    }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
   <header>
     <h1>💰 Budget Tracker</h1>
+    <div id="authSection">
+      <input type="email" id="emailInput" placeholder="Email" />
+      <input type="password" id="passwordInput" placeholder="Password" />
+      <button id="loginBtn">Login</button>
+      <button id="logoutBtn" style="display:none;">Logout</button>
+      <span id="userInfo"></span>
+    </div>
   </header>
 
-  <!-- Login Modal -->
-  <div id="loginModal" class="modal" style="
-    display:flex; justify-content:center; align-items:center;
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    background:rgba(0,0,0,0.7); z-index:9999;">
-    <div style="background:#0f172a; padding:24px; border-radius:12px; text-align:center; width:300px;">
-      <h2 style="color:#00e0ff;">Login</h2>
-      <input type="email" id="loginEmail" placeholder="Email" style="width:100%;padding:8px;margin:6px 0;border-radius:6px;border:1px solid #333;background:#111;color:#fff;"><br>
-      <input type="password" id="loginPassword" placeholder="Password" style="width:100%;padding:8px;margin:6px 0;border-radius:6px;border:1px solid #333;background:#111;color:#fff;"><br>
-      <button id="loginBtn" style="width:100%;padding:8px;margin-top:8px;background:#00e0ff;color:#000;border:none;border-radius:6px;cursor:pointer;">Sign In</button>
-      <p id="loginMsg" style="margin-top:10px;color:#aaa;font-size:0.9em;"></p>
+  <!-- Summary Cards -->
+  <section id="summarySection" class="summary-cards">
+    <div class="card" id="incomeCard">
+      <h3>Income</h3>
+      <p id="incomeTotal">$0.00</p>
     </div>
-  </div>
+    <div class="card" id="expenseCard">
+      <h3>Expenses</h3>
+      <p id="expenseTotal">$0.00</p>
+    </div>
+    <div class="card" id="balanceCard">
+      <h3>Balance</h3>
+      <p id="balanceTotal">$0.00</p>
+    </div>
+  </section>
 
+  <!-- Transaction Controls -->
+  <section id="controlsSection">
+    <button id="importBtn">📥 Import CSV</button>
+    <button id="exportCsvBtn">📤 Export CSV</button>
+    <button id="exportXlsxBtn">📊 Export XLSX</button>
+    <button id="refreshBtn">🔄 Reload</button>
+    <button id="remapBtn">🗂️ Remap Uncategorized</button>
+    <input type="file" id="fileInput" accept=".csv" style="display:none;" />
+  </section>
 
-  <main>
-    <section id="uploadSection">
-      <label for="sourceInput" style="color:#00e0ff;margin-right:8px;">Source:</label>
-      <select id="sourceInput" style="background:#111;color:#00e0ff;border:1px solid #00e0ff;padding:4px 8px;border-radius:6px;">
-        <option value="">-- Select Source --</option>
-        <option value="Checking">Checking</option>
-        <option value="Mastercard">Mastercard</option>
-        <option value="Discover">Discover</option>
-        <option value="USBank">USBank</option>
-        <option value="Centra">Centra</option>
-      </select>
-      <input type="file" id="uploadCsv" accept=".csv" />
-      <button id="loadBtn">Load Transactions</button>
-      <button id="insertBtn">Insert into Supabase</button>
-    </section>
+  <!-- Transactions Table -->
+  <section id="transactionsSection">
+    <h2>📋 Transactions</h2>
+    <table id="transactionsTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="transactionsBody"></tbody>
+    </table>
+  </section>
 
+  <!-- Charts -->
+  <section id="chartsSection">
+    <h2>📈 Spending Overview</h2>
+    <canvas id="spendingChart"></canvas>
+    <canvas id="incomeExpenseChart"></canvas>
+  </section>
 
-    <section id="summary">
-      <span id="totalExpenses">Expenses: $0</span>
-      <span id="totalIncome">Income: $0</span>
-      <span id="netTotal">Net: $0</span>
-    </section>
+  <!-- Uncategorized Summary -->
+  <section id="uncategorizedSection">
+    <h2>❓ Uncategorized Summary</h2>
+    <table id="uncategorizedTable">
+      <thead>
+        <tr><th>Description</th><th>Count</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
 
-    <section id="chartContainer">
-      <canvas id="budgetChart" height="180"></canvas>
-      <canvas id="utilityTrendChart" height="180" style="margin-top:20px;"></canvas>
-    </section>
-
-    <section id="utilities">
-      <h2 style="text-align:center;color:#00e0ff;">Utility Bill Averages</h2>
-      <table id="utilityTable">
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Avg Amount</th>
-            <th>Months</th>
-            <th>Last Updated</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <div style="text-align:center;margin:10px 0;">
-      <button id="exportCsvBtn">⬇️ Export CSV</button>
-      <button id="exportXlsxBtn">⬇️ Export Excel</button>
+  <!-- Mapping Manager -->
+  <section id="mappingSection">
+    <h2>🔖 Create / Edit Mappings</h2>
+    <div id="mappingForm">
+      <label>Transaction Text</label>
+      <input id="mapDescriptionInput" placeholder="Description text..." />
+      <label>Display Text</label>
+      <input id="mapDisplayInput" placeholder="Optional friendly label..." />
+      <label>Category</label>
+      <input id="mapCategoryInput" placeholder="Category..." />
+      <button id="saveMappingBtn">💾 Save Mapping</button>
     </div>
 
+    <h3>Saved Mappings</h3>
+    <table id="mappingTable">
+      <thead>
+        <tr><th>Description</th><th>Category</th><th>Display</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
 
-    <h2 style="text-align:center;color:#00e0ff;margin-top:30px;">Transactions</h2>
+  <footer>
+    <p>© 2025 Budget Tracker</p>
+  </footer>
 
-    <div id="filterSummary">Showing all transactions</div>
-
-    <label for="sourceFilter">Source:</label>
-    <select id="sourceFilter">
-      <option value="">All</option>
-      <option value="Checking">Checking</option>
-      <option value="Savings">Savings</option>
-      <option value="Mastercard">Mastercard</option>
-      <option value="Visa">Visa</option>
-      <option value="Amex">Amex</option>
-    </select>
-
-
-    <section id="transactions">
-      <!-- Month/category filters dynamically inserted here -->
-      <table id="dataTable">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Category</th>
-            <th>Amount</th>
-            <th>Source</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <section id="mappingManager" style="margin-top:40px;">
-      <h2 style="text-align:center;color:#00e0ff;">Description Mapping Manager</h2>
-      <form id="mappingForm">
-        <input type="hidden" id="mappingId" />
-        <input type="text" id="matchPattern" placeholder="Match Pattern" />
-        <input type="text" id="displayName" placeholder="Display Name" />
-        <input type="text" id="categoryName" placeholder="Category" />
-        <button type="submit">Save</button>
-        <button type="button" id="resetForm">Reset</button>
-      </form>
-
-      <table id="mappingTable" style="margin-top:10px;">
-        <thead>
-          <tr>
-            <th>Pattern</th>
-            <th>Display Name</th>
-            <th>Category</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-  </main>
-
-  <!-- Supabase + Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="script.js"></script>
+  <!-- Modular JavaScript Imports -->
+  <script type="module">
+    import "./js/utils.js";
+    import "./js/auth.js";
+    import "./js/transactions.js";
+    import "./js/mappings.js";
+    import "./js/import-export.js";
+    import "./js/charts.js";
+    import "./js/main.js";
+  </script>
 </body>
 </html>

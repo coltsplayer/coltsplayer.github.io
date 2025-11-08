@@ -1,107 +1,263 @@
-body {
-  font-family: "Segoe UI", sans-serif;
-  background: #111;
-  color: #fff;
+/* ===== GENERAL RESET ===== */
+* {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f6f8fa;
+  color: #222;
+  line-height: 1.5;
+  padding-bottom: 4rem;
+}
+
+/* ===== HEADER ===== */
 header {
-  text-align: center;
-  background: rgba(0, 224, 255, 0.15);
-  color: #00e0ff;
-  padding: 1rem;
-}
-
-main {
-  padding: 1rem;
-  max-width: 1100px;
-  margin: auto;
-}
-
-.card {
-  background: rgba(25, 25, 25, 0.9);
-  border-radius: 10px;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 0 10px rgba(0, 224, 255, 0.1);
-}
-
-.card h2, .card h3 {
-  color: #00e0ff;
-  border-left: 4px solid #00e0ff;
-  padding-left: 8px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-th, td {
-  border: 1px solid #333;
-  padding: 6px 10px;
-  text-align: center;
-}
-
-th {
-  background: rgba(0, 224, 255, 0.1);
-  color: #00e0ff;
-}
-
-footer {
-  text-align: center;
-  padding: 1rem;
-  color: #aaa;
-  background: #1a1a1a;
-}
-
-#mappingTable input {
-  width: 95%;
-  background: #222;
-  border: 1px solid #00e0ff;
+  background: #0078d7;
   color: #fff;
-  border-radius: 4px;
-  padding: 4px 6px;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-#mappingTable button {
-  background: rgba(0, 224, 255, 0.15);
-  color: #00e0ff;
-  border: none;
+header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+#authSection {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+#authSection input {
+  padding: 0.3rem 0.6rem;
   border-radius: 4px;
-  padding: 4px 8px;
+  border: none;
+}
+
+#authSection button {
+  background: #fff;
+  border: none;
+  color: #0078d7;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-#mappingTable button:hover {
-  background: rgba(0, 224, 255, 0.25);
+#authSection button:hover {
+  background: #eaf4ff;
 }
 
-#monthFilterContainer select,
-#monthFilterContainer button {
-  background: #111;
-  color: #00e0ff;
-  border: 1px solid #00e0ff;
+/* ===== SUMMARY CARDS ===== */
+.summary-cards {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.card {
+  flex: 1 1 200px;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  text-align: center;
+  min-width: 200px;
+}
+
+.card h3 {
+  color: #0078d7;
+  margin-bottom: 0.5rem;
+}
+
+.card p {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+/* ===== CONTROLS ===== */
+#controlsSection {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+#controlsSection button {
+  background: #0078d7;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  margin: 0.2rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#controlsSection button:hover {
+  background: #005fa3;
+}
+
+/* ===== TRANSACTIONS TABLE ===== */
+#transactionsSection {
+  margin: 1rem auto;
+  width: 95%;
+  max-width: 1200px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  padding: 1rem;
+}
+
+#transactionsSection h2 {
+  margin-bottom: 0.8rem;
+  color: #0078d7;
+}
+
+#transactionsTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#transactionsTable th, #transactionsTable td {
+  border-bottom: 1px solid #ddd;
+  padding: 0.6rem;
+  text-align: left;
+}
+
+#transactionsTable th {
+  background: #f2f2f2;
+  font-weight: 600;
+}
+
+#transactionsTable tr:hover {
+  background: #f9f9f9;
+}
+
+/* ===== CHARTS ===== */
+#chartsSection {
+  width: 95%;
+  max-width: 1200px;
+  background: #fff;
+  margin: 2rem auto;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+#chartsSection h2 {
+  margin-bottom: 0.5rem;
+  color: #0078d7;
+}
+
+canvas {
+  margin: 1rem 0;
+  width: 100%;
+  height: 300px;
+}
+
+/* ===== UNCATEGORIZED SUMMARY ===== */
+#uncategorizedSection {
+  width: 95%;
+  max-width: 800px;
+  background: #fff;
+  margin: 1rem auto;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+#uncategorizedSection h2 {
+  margin-bottom: 0.6rem;
+  color: #c0392b;
+}
+
+#uncategorizedTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#uncategorizedTable th, #uncategorizedTable td {
+  border-bottom: 1px solid #eee;
+  padding: 0.4rem;
+}
+
+#uncategorizedTable tr:hover {
+  background: #fafafa;
+}
+
+/* ===== MAPPING MANAGER ===== */
+#mappingSection {
+  width: 95%;
+  max-width: 800px;
+  background: #fff;
+  margin: 2rem auto;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+#mappingSection h2 {
+  color: #0078d7;
+  margin-bottom: 0.8rem;
+}
+
+#mappingForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+#mappingForm label {
+  flex: 1 1 100%;
+  font-weight: 600;
+  color: #333;
+}
+
+#mappingForm input {
+  flex: 1 1 45%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+#saveMappingBtn {
+  flex: 1 1 100%;
+  background: #28a745;
+  color: white;
+  border: none;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 0.6rem;
+  cursor: pointer;
+  font-weight: 600;
 }
 
-#monthFilterContainer button:hover {
-  background: #00e0ff;
-  color: #000;
+#saveMappingBtn:hover {
+  background: #218838;
 }
 
-/* Prevent wrapping and widen date column */
-#dataTable td:first-child,
-#dataTable th:first-child {
-  white-space: nowrap;
-  width: 140px;
+#mappingTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#mappingTable th, #mappingTable td {
+  border-bottom: 1px solid #eee;
+  padding: 0.5rem;
+}
+
+/* ===== FOOTER ===== */
+footer {
+  text-align: center;
+  color: #777;
+  margin-top: 2rem;
+  padding: 1rem 0;
 }
