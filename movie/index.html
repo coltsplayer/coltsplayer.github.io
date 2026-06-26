@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Movie Library</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="masthead" aria-labelledby="page-title">
+        <div class="masthead__art" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="masthead__content">
+          <p class="eyebrow">Home collection</p>
+          <h1 id="page-title">Movie Library</h1>
+          <p class="intro">Browse, search, and filter the DVD and Blu-ray collection.</p>
+        </div>
+        <div class="stats" aria-label="Collection summary">
+          <div>
+            <strong id="total-count">0</strong>
+            <span>Movies</span>
+          </div>
+          <div>
+            <strong id="own-count">0</strong>
+            <span>Owned</span>
+          </div>
+          <div>
+            <strong id="wish-count">0</strong>
+            <span>Wish list</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="toolbar" aria-label="Movie filters">
+        <label class="search">
+          <span>Search movies</span>
+          <input id="search-input" type="search" placeholder="Title, actor, genre, description..." autocomplete="off">
+        </label>
+        <label>
+          <span>Genre</span>
+          <select id="genre-filter">
+            <option value="">All genres</option>
+          </select>
+        </label>
+        <label>
+          <span>Format</span>
+          <select id="format-filter">
+            <option value="">All formats</option>
+          </select>
+        </label>
+        <label>
+          <span>Status</span>
+          <select id="status-filter">
+            <option value="">Own and wish</option>
+          </select>
+        </label>
+        <label>
+          <span>Series</span>
+          <select id="series-filter">
+            <option value="">All</option>
+            <option value="Yes">Series only</option>
+            <option value="No">Standalone only</option>
+          </select>
+        </label>
+        <button id="clear-filters" type="button">Clear</button>
+        <button id="export-csv" type="button">Export CSV</button>
+      </section>
+
+      <section class="results-bar" aria-live="polite">
+        <p><strong id="result-count">0</strong> movies shown</p>
+        <label>
+          <span>Sort by</span>
+          <select id="sort-select">
+            <option value="number-asc">Number</option>
+            <option value="title-asc">Title A-Z</option>
+            <option value="genre-asc">Genre A-Z</option>
+            <option value="actor-asc">Actor A-Z</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="movie-table-wrap" aria-label="Movie list">
+        <table class="movie-table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Title</th>
+              <th scope="col">Genre</th>
+              <th scope="col">Description</th>
+              <th scope="col">DVD/Blu-ray</th>
+              <th scope="col">Own/Wish</th>
+              <th scope="col">Main Actor</th>
+              <th scope="col">Series</th>
+              <th scope="col">New/Used</th>
+            </tr>
+          </thead>
+          <tbody id="movie-table-body"></tbody>
+        </table>
+      </section>
+
+      <section class="movie-cards" id="movie-cards" aria-label="Movie cards"></section>
+      <p class="empty" id="empty-state" hidden>No movies match the current filters.</p>
+    </main>
+
+    <script src="data/movies.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
