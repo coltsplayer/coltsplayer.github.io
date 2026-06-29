@@ -30,7 +30,9 @@ Edit `data/movies.js` and keep the same field names:
   format: "DVD",
   status: "Own",
   mainActor: "Actor name",
-  series: "No",
+  series: "Series name",
   condition: "Used"
 }
 ```
+
+Leave `series` blank for a standalone movie.
