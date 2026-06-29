@@ -42,6 +42,10 @@
     return String(value || "").trim() || fallback;
   }
 
+  function displaySeries(value) {
+    return display(value, "Standalone");
+  }
+
   function escapeHtml(value) {
     return String(value)
       .replace(/&/g, "&amp;")
@@ -115,7 +119,7 @@
         <td>${tag(movie.format, movie.format.toLowerCase().includes("blue") ? "gold" : "")}</td>
         <td>${tag(movie.status, movie.status.toLowerCase() === "wish" ? "red" : "")}</td>
         <td>${escapeHtml(display(movie.mainActor))}</td>
-        <td>${escapeHtml(display(movie.series))}</td>
+        <td>${escapeHtml(displaySeries(movie.series))}</td>
         <td>${escapeHtml(display(movie.condition))}</td>
       </tr>
     `).join("");
@@ -134,7 +138,7 @@
           <dt>Format</dt><dd>${escapeHtml(display(movie.format))}</dd>
           <dt>Own/Wish</dt><dd>${escapeHtml(display(movie.status))}</dd>
           <dt>Main Actor</dt><dd>${escapeHtml(display(movie.mainActor))}</dd>
-          <dt>Series</dt><dd>${escapeHtml(display(movie.series))}</dd>
+          <dt>Series</dt><dd>${escapeHtml(displaySeries(movie.series))}</dd>
           <dt>Condition</dt><dd>${escapeHtml(display(movie.condition))}</dd>
         </dl>
       </article>
@@ -178,6 +182,7 @@
   addOptions(els.genre, uniqueValues("genre"));
   addOptions(els.format, uniqueValues("format"));
   addOptions(els.status, uniqueValues("status"));
+  addOptions(els.series, uniqueValues("series"));
   updateStats();
   render();
 
