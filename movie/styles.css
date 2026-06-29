@@ -147,7 +147,11 @@ h1 {
 }
 
 .toolbar .search {
-  flex: 1 1 280px;
+  flex: 1 1 320px;
+}
+
+.toolbar button {
+  flex: 0 0 auto;
 }
 
 label span,
