@@ -5,12 +5,14 @@
     totalCount: document.querySelector("#total-count"),
     ownCount: document.querySelector("#own-count"),
     wishCount: document.querySelector("#wish-count"),
+    watchedCount: document.querySelector("#watched-count"),
     resultCount: document.querySelector("#result-count"),
     search: document.querySelector("#search-input"),
     genre: document.querySelector("#genre-filter"),
     format: document.querySelector("#format-filter"),
     status: document.querySelector("#status-filter"),
     series: document.querySelector("#series-filter"),
+    watched: document.querySelector("#watched-filter"),
     sort: document.querySelector("#sort-select"),
     clear: document.querySelector("#clear-filters"),
     exportCsv: document.querySelector("#export-csv"),
@@ -28,7 +30,8 @@
     "status",
     "mainActor",
     "series",
-    "condition"
+    "condition",
+    "watched"
   ];
 
   function titleCase(value) {
@@ -44,6 +47,10 @@
 
   function displaySeries(value) {
     return display(value, "Standalone");
+  }
+
+  function isWatched(value) {
+    return ["yes", "y", "true", "watched", "1"].includes(String(value || "").trim().toLowerCase());
   }
 
   function escapeHtml(value) {
@@ -73,6 +80,7 @@
     els.totalCount.textContent = movies.length;
     els.ownCount.textContent = movies.filter((movie) => movie.status.toLowerCase() === "own").length;
     els.wishCount.textContent = movies.filter((movie) => movie.status.toLowerCase() === "wish").length;
+    els.watchedCount.textContent = movies.filter((movie) => isWatched(movie.watched)).length;
   }
 
   function getFilteredMovies() {
@@ -81,6 +89,7 @@
     const activeFormat = els.format.value.toLowerCase();
     const activeStatus = els.status.value.toLowerCase();
     const activeSeries = els.series.value.toLowerCase();
+    const activeWatched = els.watched.value.toLowerCase();
 
     return movies.filter((movie) => {
       const haystack = fields.map((field) => movie[field]).join(" ").toLowerCase();
@@ -88,7 +97,8 @@
         && (!activeGenre || movie.genre.toLowerCase() === activeGenre)
         && (!activeFormat || movie.format.toLowerCase() === activeFormat)
         && (!activeStatus || movie.status.toLowerCase() === activeStatus)
-        && (!activeSeries || movie.series.toLowerCase() === activeSeries);
+        && (!activeSeries || movie.series.toLowerCase() === activeSeries)
+        && (!activeWatched || movie.watched.toLowerCase() === activeWatched);
     });
   }
 
@@ -121,6 +131,7 @@
         <td>${escapeHtml(display(movie.mainActor))}</td>
         <td>${escapeHtml(displaySeries(movie.series))}</td>
         <td>${escapeHtml(display(movie.condition))}</td>
+        <td>${tag(display(movie.watched, "No"), isWatched(movie.watched) ? "" : "red")}</td>
       </tr>
     `).join("");
   }
@@ -140,6 +151,7 @@
           <dt>Main Actor</dt><dd>${escapeHtml(display(movie.mainActor))}</dd>
           <dt>Series</dt><dd>${escapeHtml(displaySeries(movie.series))}</dd>
           <dt>Condition</dt><dd>${escapeHtml(display(movie.condition))}</dd>
+          <dt>Watched</dt><dd>${escapeHtml(display(movie.watched, "No"))}</dd>
         </dl>
       </article>
     `).join("");
@@ -159,12 +171,13 @@
     els.format.value = "";
     els.status.value = "";
     els.series.value = "";
+    els.watched.value = "";
     els.sort.value = "number-asc";
     render();
   }
 
   function exportCsv() {
-    const headers = ["Movie Number", "Movie Title", "Genre", "Description", "DVD/Blu-ray", "Own/Wish", "Main Actor", "Series", "New/Used"];
+    const headers = ["Movie Number", "Movie Title", "Genre", "Description", "DVD/Blu-ray", "Own/Wish", "Main Actor", "Series", "New/Used", "Watched"];
     const rows = sortMovies(getFilteredMovies()).map((movie) => fields.map((field) => movie[field]));
     const csv = [headers, ...rows].map((row) =>
       row.map((cell) => `"${String(cell || "").replace(/"/g, '""')}"`).join(",")
@@ -183,10 +196,11 @@
   addOptions(els.format, uniqueValues("format"));
   addOptions(els.status, uniqueValues("status"));
   addOptions(els.series, uniqueValues("series"));
+  addOptions(els.watched, uniqueValues("watched"));
   updateStats();
   render();
 
-  [els.search, els.genre, els.format, els.status, els.series, els.sort].forEach((input) => {
+  [els.search, els.genre, els.format, els.status, els.series, els.watched, els.sort].forEach((input) => {
     input.addEventListener("input", render);
   });
   els.clear.addEventListener("click", clearFilters);
