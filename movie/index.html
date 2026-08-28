@@ -30,6 +30,10 @@
             <strong id="wish-count">0</strong>
             <span>Wish list</span>
           </div>
+          <div>
+            <strong id="watched-count">0</strong>
+            <span>Watched</span>
+          </div>
         </div>
       </section>
 
@@ -62,6 +66,12 @@
             <option value="">All series</option>
           </select>
         </label>
+        <label>
+          <span>Watched</span>
+          <select id="watched-filter">
+            <option value="">All</option>
+          </select>
+        </label>
         <button id="clear-filters" type="button">Clear</button>
         <button id="export-csv" type="button">Export CSV</button>
       </section>
@@ -92,6 +102,7 @@
               <th scope="col">Main Actor</th>
               <th scope="col">Series</th>
               <th scope="col">New/Used</th>
+              <th scope="col">Watched</th>
             </tr>
           </thead>
           <tbody id="movie-table-body"></tbody>
